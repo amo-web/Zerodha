@@ -1,0 +1,11 @@
+.venv
+__pycache__/
+*.pyc
+.env
+.data/
+.kite_session.json
+.kite_state.json
+.kite_tokens.json
+.ui_state.json
+.idea/
+.vscode/
