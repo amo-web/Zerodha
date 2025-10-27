@@ -13,7 +13,7 @@ A modern Next.js app to login to your Zerodha Kite account, persist the access t
 ## Prerequisites
 - Node.js 18+
 - A Kite Connect app with API Key and Secret
-- Redirect URL for the app can be anything; we copy the request_token manually for this simplified flow
+- Set your Kite app Redirect URL to `http://localhost:3000/callback` (for dev)
 
 ## Setup
 1. Install dependencies (already done in this repo):
@@ -31,10 +31,10 @@ A modern Next.js app to login to your Zerodha Kite account, persist the access t
 
 ## Usage
 1. Enter your API Key and Secret in the Credentials card and click Save.
-2. Click "Login to Kite". A new tab opens for Zerodha login and app authorization.
-3. After successful login, you will be redirected to the redirect URL with `request_token` in the URL. Copy just the `request_token` value.
-4. Back in the app, click "Submit request_token" and paste the token. The app exchanges it for an `access_token` and stores it server-side.
-5. You should now see Funds populated. You can place a simple order in the Place Order section.
+2. Click "Login to Kite". You'll be redirected to Kite to authorize the app.
+3. On success, Kite redirects back to `/callback`, which auto-exchanges the `request_token` and stores the `access_token`.
+4. You'll be redirected back to the dashboard with funds visible.
+5. Place a simple order from the Place Order section.
 
 ## Security notes
 - Secrets and tokens are stored in `data/kite-session.json` on the server. Avoid committing this file.

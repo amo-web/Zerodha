@@ -41,7 +41,8 @@ export default function Home() {
     const res = await fetch("/api/login");
     const data = await res.json();
     if (data?.url) {
-      window.open(data.url, "_blank");
+      // Ensure the redirect URI of your Kite app points to /callback
+      window.location.href = data.url;
     }
   }
 
@@ -133,8 +134,7 @@ export default function Home() {
             </div>
             {!isAuthed && canLogin && (
               <div className="mt-4 flex gap-3">
-                <Button onClick={startLogin}>Open Login</Button>
-                <Button onClick={handleCallback}>Submit request_token</Button>
+                <Button onClick={startLogin}>Login to Kite</Button>
               </div>
             )}
           </Card>
