@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zerodha Authentication</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success {
+            color: #22c55e;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .error {
+            color: #ef4444;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading">
+            <div class="spinner"></div>
+            <h2>Processing Authentication...</h2>
+            <p>Please wait while we complete your login.</p>
+        </div>
+        
+        <div id="success" style="display: none;">
+            <div class="success">✓</div>
+            <h2>Authentication Successful!</h2>
+            <p>You can now close this window and return to the trading bot.</p>
+            <button class="btn" onclick="closeWindow()">Close Window</button>
+        </div>
+        
+        <div id="error" style="display: none;">
+            <div class="error">✗</div>
+            <h2>Authentication Failed</h2>
+            <p id="errorMessage">Something went wrong during authentication.</p>
+            <button class="btn" onclick="closeWindow()">Close Window</button>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestToken = urlParams.get('request_token');
+        const apiKey = urlParams.get('api_key');
+        const error = urlParams.get('error');
+
+        async function processAuth() {
+            if (error) {
+                showError(error);
+                return;
+            }
+
+            if (!requestToken || !apiKey) {
+                showError('Missing authentication parameters');
+                return;
+            }
+
+            try {
+                // Send request token to backend
+                const response = await fetch('/api/auth/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        request_token: requestToken,
+                        api_key: apiKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Get user profile
+                    const profileResponse = await fetch(`/api/user/profile/${apiKey}`);
+                    const profileData = await profileResponse.json();
+                    
+                    if (profileResponse.ok) {
+                        // Send success message to parent window
+                        window.opener.postMessage({
+                            type: 'ZERODHA_AUTH_SUCCESS',
+                            userData: profileData
+                        }, window.location.origin);
+                        
+                        showSuccess();
+                    } else {
+                        throw new Error('Failed to fetch user profile');
+                    }
+                } else {
+                    throw new Error(data.error || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                showError(error.message);
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('success').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+            
+            // Send error message to parent window
+            window.opener.postMessage({
+                type: 'ZERODHA_AUTH_ERROR',
+                error: message
+            }, window.location.origin);
+        }
+
+        function closeWindow() {
+            window.close();
+        }
+
+        // Process authentication when page loads
+        window.addEventListener('load', processAuth);
+    </script>
+</body>
+</html>
