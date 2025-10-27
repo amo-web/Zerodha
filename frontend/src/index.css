@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .glass-effect {
+    @apply backdrop-blur-xl bg-white/80 border border-white/20 shadow-xl;
+  }
+  
+  .gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+  }
+}
